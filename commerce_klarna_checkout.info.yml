@@ -1,0 +1,7 @@
+name: Commerce Klarna Checkout
+type: module
+description: 'Provides payment gateway for Klarna Checkout.'
+package: Commerce (contrib)
+core: 8.x
+dependencies:
+  - commerce:commerce_payment

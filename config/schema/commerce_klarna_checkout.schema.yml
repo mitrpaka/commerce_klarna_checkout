@@ -1,0 +1,18 @@
+commerce_payment.commerce_payment_gateway.plugin.klarna_checkout:
+  type: commerce_payment_gateway_configuration
+  mapping:
+    merchant_id:
+      type: string
+      label: 'Merchant ID'
+    password:
+      type: string
+      label: 'Merchant Secret Key'
+    live_mode:
+      type: boolena
+      label: 'Live mode'
+    terms_path:
+      type: path
+      label: 'Terms path'
+    language:
+      type: sequence
+      label: 'Language'

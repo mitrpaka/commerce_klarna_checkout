@@ -1,0 +1,16 @@
+{
+    "name": "drupal/commerce_klarna_checkout",
+    "type": "drupal-module",
+    "description": "Provides Commerce integration for Klarna Checkout.",
+    "homepage": "http://drupal.org/project/commerce_klarna_checkout",
+    "license": "GPL-2.0+",
+    "require": {
+        "drupal/commerce": "~2.0",
+        "klarna/checkout": "~4.0",
+    },
+    "autoload": {
+        "files": [
+            "vendor/klarna/checkout/src/Klarna/Checkout.php"
+        ]
+    }
+}

@@ -1,0 +1,4 @@
+services:
+  commerce_klarna_checkout.payment_manager:
+    class: Drupal\commerce_klarna_checkout\KlarnaManager
+    arguments: ['@http_client']
