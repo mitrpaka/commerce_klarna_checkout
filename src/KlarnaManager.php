@@ -39,7 +39,7 @@ class KlarnaManager {
         'reference' => $item->getTitle(),
         'name' => $item->getTitle(),
         'quantity' => (int) $item->getQuantity(),
-        'unit_price' => (int) $item_amount->getNumber() * 100,
+        'unit_price' => (int) ($item_amount->getNumber() * 100),
         'tax_rate' => $tax_rate ? $tax_rate * 100 : 0,
       ];
     }
@@ -66,7 +66,7 @@ class KlarnaManager {
       'id' => $plugin_configuration['merchant_id'],
       'terms_uri' => Url::fromUserInput($plugin_configuration['terms_path'], ['absolute' => TRUE])->toString(),
       'checkout_uri' => $this->getReturnUrl($order, 'commerce_payment.checkout.cancel'),
-      'confirmation_uri' => $this->getReturnUrl($order, 'commerce_klarna_checkout.confirmation_post') .
+      'confirmation_uri' => $this->getReturnUrl($order, 'commerce_payment.checkout.return') .
         '&klarna_order_id={checkout.order.id}',
       'push_uri' => $this->getReturnUrl($order, 'commerce_payment.notify', 'complete') .
         '&klarna_order_id={checkout.order.id}',

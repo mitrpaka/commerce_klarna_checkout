@@ -53,6 +53,13 @@ CONFIGURATION
   to define custom "Completion message" pane (that is not visible when
   Klarna Checkout payment method is selected)
 
+* Order workflow
+  Please edit your order type to select one of the workflows with validation.
+  - Commerce order is placed when user has completed a purchase and the confirmation
+  snippet is shown at order complete phase.
+  - Commerce order is validated (and payment state set to completed) once push
+  notification from Klarna have been received.
+
 
 TROUBLESHOOTING
 ---------------

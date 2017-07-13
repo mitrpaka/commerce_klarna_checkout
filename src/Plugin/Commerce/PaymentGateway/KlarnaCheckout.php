@@ -197,7 +197,7 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
     // Get order from Klarna.
     $klarna_order = $this->klarna->getOrder($commerce_order, $commerce_order->getData('klarna_id'));
 
-    // Complete commerce order and acknowledge order to Klarna.
+    // Validate commerce order and acknowledge order to Klarna.
     if (isset($klarna_order)) {
       if ($klarna_order['status'] == 'checkout_complete') {
         // Mark payment as captured.
@@ -206,12 +206,14 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
         $payment->setState('completed');
         $payment->save();
 
-        // Complete commerce order.
+        // Validate commerce order.
         $transition = $commerce_order->getState()
           ->getWorkflow()
-          ->getTransition('place');
-        $commerce_order->getState()->applyTransition($transition);
-        $commerce_order->save();
+          ->getTransition('validate');
+        if (isset($transition)) {
+          $commerce_order->getState()->applyTransition($transition);
+          $commerce_order->save();
+        }
 
         // Update Klarna order status.
         $update = [];
