@@ -3,6 +3,7 @@
 namespace Drupal\commerce_klarna_checkout;
 
 use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Url;
 use Klarna_Checkout_Connector;
 use Klarna_Checkout_Order;
@@ -163,6 +164,26 @@ class KlarnaManager {
     }
 
     return $klarna_order;
+  }
+
+  /**
+   * Update order's billing profile.
+   *
+   * @param \Drupal\commerce_order\Entity\OrderInterface $order
+   * @param array $klarna_billing_address
+   */
+  public function updateBillingProfile(OrderInterface $order, array $klarna_billing_address) {
+    if ($billing_profile = $order->getBillingProfile()) {
+      $billing_profile->get('address')->first()->setValue([
+        'given_name' => $klarna_billing_address['given_name'],
+        'family_name' => $klarna_billing_address['family_name'],
+        'address_line1' => $klarna_billing_address['street_address'],
+        'postal_code' => $klarna_billing_address['postal_code'],
+        'locality' => $klarna_billing_address['city'],
+        'country_code' => Unicode::strtoupper($klarna_billing_address['country']),
+      ]);
+      $billing_profile->save();
+    }
   }
 
   /**

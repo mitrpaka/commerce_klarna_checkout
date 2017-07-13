@@ -8,7 +8,7 @@ commerce_payment.commerce_payment_gateway.plugin.klarna_checkout:
       type: string
       label: 'Merchant Secret Key'
     live_mode:
-      type: boolena
+      type: string
       label: 'Live mode'
     terms_path:
       type: path
@@ -16,3 +16,6 @@ commerce_payment.commerce_payment_gateway.plugin.klarna_checkout:
     language:
       type: sequence
       label: 'Language'
+    update_billing_profile:
+      type: sequence
+      label: 'Update billing profile'

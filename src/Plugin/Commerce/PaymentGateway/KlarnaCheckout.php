@@ -90,6 +90,7 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
       'password' => '',
       'terms_path' => '',
       'language' => 'sv-se',
+      'update_billing_profile' => 0,
     ] + parent::defaultConfiguration();
   }
 
@@ -111,25 +112,36 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
       '#default_value' => $this->configuration['password'],
     ];
 
-    $form['terms_path'] = array(
+    $form['terms_path'] = [
       '#type'           => 'textfield',
-      '#title'          => t('Path to terms and conditions page'),
+      '#title'          => $this->t('Path to terms and conditions page'),
       '#default_value'  => $this->configuration['terms_path'],
       '#required'       => TRUE,
-    );
+    ];
 
-    $form['language'] = array(
+    $form['language'] = [
       '#type'           => 'select',
-      '#title'          => t('Language'),
+      '#title'          => $this->t('Language'),
       '#default_value'  => $this->configuration['language'],
       '#required'       => TRUE,
-      '#options'        => array(
-        'sv-se'         => t('Swedish'),
-        'nb-no'         => t('Norwegian'),
-        'fi-fi'         => t('Finnish'),
-        'sv-fi'         => t('Swedish (Finland)'),
-      ),
-    );
+      '#options'        => [
+        'sv-se'         => $this->t('Swedish'),
+        'nb-no'         => $this->t('Norwegian'),
+        'fi-fi'         => $this->t('Finnish'),
+        'sv-fi'         => $this->t('Swedish (Finland)'),
+      ],
+    ];
+
+    $form['update_billing_profile'] = [
+      '#type'           => 'select',
+      '#title'          => $this->t('Update billing profile using information from Klarna'),
+      '#description'    => $this->t('Using this option, you most probably want to hide Payment information from the Checkout panes programmatically.'),
+      '#options'        => [
+        0 => $this->t('No'),
+        1 => $this->t('Yes'),
+      ],
+      '#default_value'  => $this->configuration['update_billing_profile'],
+    ];
 
     return $form;
   }
@@ -146,6 +158,7 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
       $this->configuration['password'] = $values['password'];
       $this->configuration['terms_path'] = $values['terms_path'];
       $this->configuration['language'] = $values['language'];
+      $this->configuration['update_billing_profile'] = $values['update_billing_profile'];
     }
   }
 
@@ -205,6 +218,11 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
         $payment = $this->getPayment($commerce_order);
         $payment->setState('completed');
         $payment->save();
+
+        // Update billing profile (if enabled).
+        if ($this->configuration['update_billing_profile'] && isset($klarna_order['billing_address'])) {
+          $this->klarna->updateBillingProfile($commerce_order, $klarna_order['billing_address']);
+        }
 
         // Validate commerce order.
         $transition = $commerce_order->getState()
