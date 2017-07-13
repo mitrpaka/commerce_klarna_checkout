@@ -8,6 +8,7 @@ use Drupal\commerce_payment\Entity\PaymentInterface;
 use Drupal\commerce_payment\PaymentMethodTypeManager;
 use Drupal\commerce_payment\PaymentTypeManager;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayBase;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Psr\Log\LoggerInterface;
@@ -51,11 +52,12 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    * @param \Drupal\commerce_payment\PaymentTypeManager $payment_type_manager
    * @param \Drupal\commerce_payment\PaymentMethodTypeManager $payment_method_type_manager
+   * @param \Drupal\Component\Datetime\TimeInterface
    * @param \Drupal\commerce_klarna_checkout\KlarnaManager $klarnaManager
    * @param \Psr\Log\LoggerInterface $logger
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, KlarnaManager $klarnaManager, LoggerInterface $logger) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager);
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, KlarnaManager $klarnaManager, LoggerInterface $logger) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
 
     $this->klarna = $klarnaManager;
     $this->logger = $logger;
@@ -72,6 +74,7 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
       $container->get('entity_type.manager'),
       $container->get('plugin.manager.commerce_payment_type'),
       $container->get('plugin.manager.commerce_payment_method_type'),
+      $container->get('datetime.time'),
       $container->get('commerce_klarna_checkout.payment_manager'),
       $container->get('logger.factory')->get('commerce_klarna_checkout')
     );
@@ -200,7 +203,7 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
         // Mark payment as captured.
         /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
         $payment = $this->getPayment($commerce_order);
-        $payment->state = 'capture_completed';
+        $payment->setState('completed');
         $payment->save();
 
         // Complete commerce order.
