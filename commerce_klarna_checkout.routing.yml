@@ -1,15 +1,3 @@
-commerce_klarna_checkout.redirect_post:
-  path: '/checkout/{commerce_order}/{step}/klarna_checkout'
-  defaults:
-    _controller: '\Drupal\commerce_klarna_checkout\Controller\KlarnaCheckoutController::returnCheckoutForm'
-  requirements:
-    _custom_access: '\Drupal\commerce_checkout\Controller\CheckoutController::checkAccess'
-    _module_dependencies: commerce_checkout
-  options:
-    parameters:
-      commerce_order:
-        type: entity:commerce_order
-
 commerce_klarna_checkout.confirmation_post:
   path: '/checkout/{commerce_order}/{step}/klarna_checkout/return'
   defaults:

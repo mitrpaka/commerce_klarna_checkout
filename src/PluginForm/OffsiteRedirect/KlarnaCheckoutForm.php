@@ -39,19 +39,13 @@ class KlarnaCheckoutForm extends BasePaymentOffsiteForm {
       debug($e->getMessage(), TRUE);
     }
 
-    $redirect_url = Url::fromRoute('commerce_klarna_checkout.redirect_post', [
-      'commerce_order' => $payment->getOrder()->id(),
-      'step' => 'payment',
-    ], ['absolute' => TRUE])->toString();
-
-    // Encode snippet to prevent potential
-    // "ERR_BLOCKED_BY_XSS_AUDITOR" errors from browsers (Chrome & Safari)
-    // @todo: Any better way to handle this?
-    $data = [
-      'snippet' => base64_encode($snippet),
+    // Embed snippet to plugin form (no redirect needed).
+    $form['klarna'] = [
+      '#type' => 'inline_template',
+      '#template' => "<div id='klarna-checkout-form'>{$snippet}</div>",
+      '#context' => ['snippet' => $snippet],
     ];
 
-    return $this->buildRedirectForm($form, $form_state, $redirect_url, $data, self::REDIRECT_POST);
+    return $form;
   }
-
 }
