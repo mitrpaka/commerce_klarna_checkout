@@ -7,10 +7,5 @@
     "require": {
         "drupal/commerce": "~2.0",
         "klarna/checkout": "~4.0"
-    },
-    "autoload": {
-        "files": [
-            "vendor/klarna/checkout/src/Klarna/Checkout.php"
-        ]
     }
 }
