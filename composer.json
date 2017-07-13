@@ -6,7 +6,7 @@
     "license": "GPL-2.0+",
     "require": {
         "drupal/commerce": "~2.0",
-        "klarna/checkout": "~4.0",
+        "klarna/checkout": "~4.0"
     },
     "autoload": {
         "files": [
