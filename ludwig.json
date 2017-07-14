@@ -1,0 +1,8 @@
+{
+    "require": {
+        "klarna/checkout": {
+            "version" : "v4.0.0",
+            "url": "https://github.com/klarna/kco_php/archive/v4.0.0.zip"
+        }
+    }
+}

@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * Contains install and update functions for Commerce Klarna Checkout.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function commerce_klarna_checkout_requirements($phase) {
+  $requirements = [];
+  if ($phase == 'install') {
+    if (!class_exists('\Klarna_Checkout_Connector')) {
+      $requirements['commerce_klarna_checkout_library'] = [
+        'description' => t('Commerce Klarna Checkout requires the klarna/checkout library.'),
+        'severity' => REQUIREMENT_ERROR,
+      ];
+    }
+  }
+
+  return $requirements;
+}
