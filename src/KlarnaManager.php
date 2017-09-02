@@ -4,6 +4,7 @@ namespace Drupal\commerce_klarna_checkout;
 
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_price\Calculator;
+use Drupal\Component\Utility\SortArray;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Url;
 use Klarna_Checkout_Connector;
@@ -38,24 +39,52 @@ class KlarnaManager {
         'reference' => $item->getTitle(),
         'name' => $item->getTitle(),
         'quantity' => (int) $item->getQuantity(),
-        'unit_price' => (int) ($item_amount->getNumber() * 100),
+        'unit_price' => (int) $item_amount->multiply('100')->getNumber(),
         'tax_rate' => $tax_rate ? (int) Calculator::multiply($tax_rate, '10000') : 0,
       ];
     }
 
-    // Add adjustments.
+    // Add adjustments (excluding tax).
+    $adjustments = [];
     foreach ($order->collectAdjustments() as $adjustment) {
-      if ($adjustment->getType() != 'tax') {
-        $adjustment_amount = $adjustment->getAmount();
-        $create['cart']['items'][] = [
-          'reference' => $adjustment->getLabel()->getUntranslatedString(),
-          'name' => $adjustment->getLabel()->getUntranslatedString(),
-          'quantity' => 1,
-          'unit_price' => $adjustment_amount->getNumber() * 100,
-          'tax_rate' => 0,
-        ];
+      $type = $adjustment->getType();
+      $source_id = $adjustment->getSourceId();
+      if ($type != 'tax') {
+        if (empty($source_id)) {
+          // Adjustments without a source ID are always shown standalone.
+          $key = count($adjustments);
+        }
+        else {
+          // Adjustments with the same type and source ID are combined.
+          $key = $type . '_' . $source_id;
+        }
+
+        if (empty($adjustments[$key])) {
+          $adjustments[$key] = [
+            'reference' => $adjustment->getLabel()->getUntranslatedString(),
+            'name' => $adjustment->getLabel()->getUntranslatedString(),
+            'quantity' => 1,
+            'unit_price' => (int) $adjustment->getAmount()->multiply('100')->getNumber(),
+            'tax_rate' => 0,
+          ];
+
+          // Cart item object type (Klarna).
+          if ($type == 'promotion') {
+            $adjustments[$key]['type'] = 'discount';
+          }
+          elseif ($type == 'shipping') {
+            $adjustments[$key]['type'] = 'shipping_fee';
+          }
+        }
+        else {
+          $adjustments[$key]['unit_price'] += (int) $adjustment->getAmount()->multiply('100')->getNumber();
+        }
       }
     }
+    // Sort the adjustments by weight.
+    uasort($adjustments, [SortArray::class, 'sortByWeightElement']);
+    // Merge adjustments to cart item objects (Klarna).
+    $create['cart']['items'] = array_values(array_merge($create['cart']['items'], $adjustments));
 
     $create['purchase_country'] = $this->getCountryFromLocale($plugin_configuration['language']);
     $create['purchase_currency'] = $order->getTotalPrice()->getCurrencyCode();
