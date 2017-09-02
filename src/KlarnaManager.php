@@ -3,6 +3,7 @@
 namespace Drupal\commerce_klarna_checkout;
 
 use Drupal\commerce_order\Entity\OrderInterface;
+use Drupal\commerce_price\Calculator;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Url;
 use Klarna_Checkout_Connector;
@@ -29,10 +30,7 @@ class KlarnaManager {
       $tax_rate = 0;
       foreach ($item->getAdjustments() as $adjustment) {
         if ($adjustment->getType() == 'tax') {
-          // TODO: Easier way to determine applied tax rate?
-          $tax_amount = (float) $adjustment->getAmount()->getNumber();
-          $item_amount = (float) $item->getTotalPrice()->getNumber();
-          $tax_rate = intval(100 * ($tax_amount / ($item_amount - $tax_amount)));
+          $tax_rate = $adjustment->getPercentage();
         }
       }
       $item_amount = $item->getUnitPrice();
@@ -41,7 +39,7 @@ class KlarnaManager {
         'name' => $item->getTitle(),
         'quantity' => (int) $item->getQuantity(),
         'unit_price' => (int) ($item_amount->getNumber() * 100),
-        'tax_rate' => $tax_rate ? $tax_rate * 100 : 0,
+        'tax_rate' => $tax_rate ? (int) Calculator::multiply($tax_rate, '10000') : 0,
       ];
     }
 
