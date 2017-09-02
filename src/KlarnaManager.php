@@ -10,7 +10,6 @@ use Drupal\Core\Url;
 use Klarna_Checkout_Connector;
 use Klarna_Checkout_Order;
 
-
 /**
  * Class KlarnaManager.
  *
@@ -90,16 +89,14 @@ class KlarnaManager {
     $create['purchase_currency'] = $order->getTotalPrice()->getCurrencyCode();
     $create['locale'] = $plugin_configuration['language'];
     $create['merchant_reference'] = ['orderid1' => $order->id()];
-    $create['merchant'] = array(
+    $create['merchant'] = [
       'id' => $plugin_configuration['merchant_id'],
       'terms_uri' => Url::fromUserInput($plugin_configuration['terms_path'], ['absolute' => TRUE])->toString(),
       'checkout_uri' => $this->getReturnUrl($order, 'commerce_payment.checkout.cancel'),
-      'confirmation_uri' => $this->getReturnUrl($order, 'commerce_payment.checkout.return') .
-        '&klarna_order_id={checkout.order.id}',
-      'push_uri' => $this->getReturnUrl($order, 'commerce_payment.notify', 'complete') .
-        '&klarna_order_id={checkout.order.id}',
+      'confirmation_uri' => $this->getReturnUrl($order, 'commerce_payment.checkout.return') . '&klarna_order_id={checkout.order.id}',
+      'push_uri' => $this->getReturnUrl($order, 'commerce_payment.notify', 'complete') . '&klarna_order_id={checkout.order.id}',
       'back_to_store_uri' => $this->getReturnUrl($order, 'commerce_payment.checkout.cancel'),
-    );
+    ];
 
     try {
       $connector = $this->getConnector($plugin_configuration);
@@ -116,10 +113,17 @@ class KlarnaManager {
   }
 
   /**
+   * Get return url for given type and checkout step.
+   *
    * @param \Drupal\commerce_order\Entity\OrderInterface $order
-   * @param $type
+   *   The order.
+   * @param string $type
+   *   Return type.
    * @param string $step
+   *   Step id.
+   *
    * @return \Drupal\Core\GeneratedUrl|string
+   *   Return absolute return url.
    */
   protected function getReturnUrl(OrderInterface $order, $type, $step = 'payment') {
     $arguments = [
@@ -138,7 +142,7 @@ class KlarnaManager {
    * Helper function that returns the Klarna Checkout order management endpoint.
    *
    * @return string
-   *   The Klarna Checkout endpoint URI
+   *   The Klarna Checkout endpoint URI.
    */
   public function getBaseEndpoint(array $plugin_configuration) {
     // Server URI.
@@ -152,8 +156,13 @@ class KlarnaManager {
   }
 
   /**
+   * Get Klarna Connector.
+   *
    * @param array $plugin_configuration
+   *   The plugin configuration.
+   *
    * @return \Klarna_Checkout_ConnectorInterface
+   *   Klarna Connector.
    */
   public function getConnector(array $plugin_configuration) {
     // Server URI.
@@ -176,8 +185,12 @@ class KlarnaManager {
    * Get order details from Klarna.
    *
    * @param \Drupal\commerce_order\Entity\OrderInterface $order
-   * @param $checkout_id
+   *   The order.
+   * @param string $checkout_id
+   *   Klarna Checkout Order id.
+   *
    * @return \Klarna_Checkout_Order
+   *   Klarna order.
    */
   public function getOrder(OrderInterface $order, $checkout_id) {
     try {
@@ -197,7 +210,9 @@ class KlarnaManager {
    * Update order's billing profile.
    *
    * @param \Drupal\commerce_order\Entity\OrderInterface $order
+   *   The order.
    * @param array $klarna_billing_address
+   *   Klarna billing address.
    */
   public function updateBillingProfile(OrderInterface $order, array $klarna_billing_address) {
     if ($billing_profile = $order->getBillingProfile()) {
@@ -217,7 +232,10 @@ class KlarnaManager {
    * Get payment gateway configuration.
    *
    * @param \Drupal\commerce_order\Entity\OrderInterface $order
+   *   The order.
+   *
    * @return array
+   *   Plugin configuration.
    */
   protected function getPluginConfiguration(OrderInterface $order) {
     /** @var \Drupal\commerce_payment\Entity\PaymentGatewayInterface $payment_gateway */
@@ -232,7 +250,10 @@ class KlarnaManager {
    * Get country code from locale setting.
    *
    * @param string $locale
+   *   Locale.
+   *
    * @return bool|mixed
+   *   Country code.
    */
   protected function getCountryFromLocale($locale = 'sv-se') {
     $country_codes = [
@@ -244,4 +265,5 @@ class KlarnaManager {
 
     return empty($country_codes[$locale]) ? FALSE : $country_codes[$locale];
   }
+
 }

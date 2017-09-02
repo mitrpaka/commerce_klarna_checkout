@@ -47,14 +47,23 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
    * KlarnaCheckout constructor.
    *
    * @param array $configuration
+   *   A configuration array containing information about the plugin instance.
    * @param string $plugin_id
+   *   The plugin_id for the plugin instance.
    * @param mixed $plugin_definition
+   *   The plugin implementation definition.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   The entity type manager.
    * @param \Drupal\commerce_payment\PaymentTypeManager $payment_type_manager
+   *   The payment type manager.
    * @param \Drupal\commerce_payment\PaymentMethodTypeManager $payment_method_type_manager
-   * @param \Drupal\Component\Datetime\TimeInterface
+   *   The payment method type manager.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time.
    * @param \Drupal\commerce_klarna_checkout\KlarnaManager $klarnaManager
+   *   The Klarna manager.
    * @param \Psr\Log\LoggerInterface $logger
+   *   A logger instance.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, EntityTypeManagerInterface $entity_type_manager, PaymentTypeManager $payment_type_manager, PaymentMethodTypeManager $payment_method_type_manager, TimeInterface $time, KlarnaManager $klarnaManager, LoggerInterface $logger) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $entity_type_manager, $payment_type_manager, $payment_method_type_manager, $time);
@@ -174,7 +183,7 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
       'order_id' => $order->id(),
       'test' => $this->getMode() == 'test',
       'remote_id' => $request->query->get('klarna_order_id'),
-      'remote_state' => 'paid', //$request->query->get('payment_status'),
+      'remote_state' => 'paid',
       'authorized' => \Drupal::time()->getRequestTime(),
     ]);
     $payment->save();
@@ -260,7 +269,10 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
    * Add cart items and create checkout order.
    *
    * @param \Drupal\commerce_payment\Entity\PaymentInterface $payment
+   *   The payment.
+   *
    * @return \Klarna_Checkout_Order
+   *   The Klarna order.
    */
   public function setKlarnaCheckout(PaymentInterface $payment) {
     $order = $payment->getOrder();
@@ -269,8 +281,13 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
   }
 
   /**
+   * Get payment for the given order.
+   *
    * @param \Drupal\commerce_order\Entity\OrderInterface $order
+   *   The order.
+   *
    * @return bool|\Drupal\commerce_payment\Entity\PaymentInterface
+   *   The payment.
    */
   protected function getPayment(OrderInterface $order) {
     /** @var \Drupal\commerce_payment\Entity\PaymentInterface[] $payments */

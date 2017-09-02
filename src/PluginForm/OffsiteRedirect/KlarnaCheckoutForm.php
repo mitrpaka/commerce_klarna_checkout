@@ -4,7 +4,6 @@ namespace Drupal\commerce_klarna_checkout\PluginForm\OffsiteRedirect;
 
 use Drupal\commerce_payment\PluginForm\PaymentOffsiteForm as BasePaymentOffsiteForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
 
 class KlarnaCheckoutForm extends BasePaymentOffsiteForm {
 
@@ -48,4 +47,5 @@ class KlarnaCheckoutForm extends BasePaymentOffsiteForm {
 
     return $form;
   }
+
 }

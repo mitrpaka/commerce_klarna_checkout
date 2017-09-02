@@ -6,7 +6,6 @@ use Drupal\commerce_checkout\Plugin\Commerce\CheckoutFlow\CheckoutFlowInterface;
 use Drupal\commerce_checkout\Plugin\Commerce\CheckoutPane\CheckoutPaneBase;
 use Drupal\commerce_klarna_checkout\KlarnaManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -29,7 +28,7 @@ class KlarnaCompletionMessage extends CheckoutPaneBase {
   protected $klarna;
 
   /**
-   * Constructs a new ShippingInformation object.
+   * Constructs a new KlarnaCompletionMessage object.
    *
    * @param array $configuration
    *   A configuration array containing information about the plugin instance.
@@ -41,10 +40,8 @@ class KlarnaCompletionMessage extends CheckoutPaneBase {
    *   The parent checkout flow.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\commerce_klarna_checkout\KlarnaManager
-   *  The klarna payment manager.
-   * @param \Drupal\Core\Form\FormBuilderInterface
-   *  The form builder.
+   * @param \Drupal\commerce_klarna_checkout\KlarnaManager $klarnaManager
+   *   The Klarna payment manager.
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, CheckoutFlowInterface $checkout_flow, EntityTypeManagerInterface $entity_type_manager, KlarnaManager $klarnaManager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $checkout_flow, $entity_type_manager);
@@ -99,4 +96,5 @@ class KlarnaCompletionMessage extends CheckoutPaneBase {
     }
     return FALSE;
   }
+
 }
