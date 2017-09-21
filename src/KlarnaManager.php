@@ -219,7 +219,11 @@ class KlarnaManager {
       $billing_profile->get('address')->first()->setValue([
         'given_name' => $klarna_billing_address['given_name'],
         'family_name' => $klarna_billing_address['family_name'],
-        'address_line1' => $klarna_billing_address['street_address'],
+        // Only in Sweden, Norway and Finland: Street address.
+        // Only in Germany and Austria: Street name and Street number.
+        'address_line1' => array_key_exists('street_address', $klarna_billing_address) ?
+          $klarna_billing_address['street_address'] :
+          $klarna_billing_address['street_name'] . ' ' . $klarna_billing_address['street_number'],
         'postal_code' => $klarna_billing_address['postal_code'],
         'locality' => $klarna_billing_address['city'],
         'country_code' => Unicode::strtoupper($klarna_billing_address['country']),
@@ -261,6 +265,8 @@ class KlarnaManager {
       'fi-fi' => 'FI',
       'sv-fi' => 'FI',
       'nb-no' => 'NO',
+      'de-de' => 'DE',
+      'de-at' => 'AT',
     ];
 
     return empty($country_codes[$locale]) ? FALSE : $country_codes[$locale];

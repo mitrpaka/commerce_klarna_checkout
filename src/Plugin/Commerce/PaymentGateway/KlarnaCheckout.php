@@ -138,6 +138,8 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
         'nb-no'         => $this->t('Norwegian'),
         'fi-fi'         => $this->t('Finnish'),
         'sv-fi'         => $this->t('Swedish (Finland)'),
+        'de-de'         => $this->t('German'),
+        'de-at'         => $this->t('German (Austria)'),
       ],
     ];
 
