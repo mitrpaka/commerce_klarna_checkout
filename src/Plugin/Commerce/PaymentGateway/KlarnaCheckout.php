@@ -20,7 +20,7 @@ use Symfony\Component\HttpFoundation\Request;
  *
  * @CommercePaymentGateway(
  *   id = "klarna_checkout",
- *   label = "Example (Klarna Checkout)",
+ *   label = "Klarna Checkout",
  *   display_label = "Klarna Checkout",
  *    forms = {
  *     "offsite-payment" = "Drupal\commerce_klarna_checkout\PluginForm\OffsiteRedirect\KlarnaCheckoutForm",
