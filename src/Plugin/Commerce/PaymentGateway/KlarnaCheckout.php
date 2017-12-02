@@ -5,6 +5,7 @@ namespace Drupal\commerce_klarna_checkout\Plugin\Commerce\PaymentGateway;
 use Drupal\commerce_klarna_checkout\KlarnaManager;
 use Drupal\commerce_order\Entity\OrderInterface;
 use Drupal\commerce_payment\Entity\PaymentInterface;
+use Drupal\commerce_payment\Exception\PaymentGatewayException;
 use Drupal\commerce_payment\PaymentMethodTypeManager;
 use Drupal\commerce_payment\PaymentTypeManager;
 use Drupal\commerce_payment\Plugin\Commerce\PaymentGateway\OffsitePaymentGatewayBase;
@@ -177,6 +178,19 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
    * {@inheritdoc}
    */
   public function onReturn(OrderInterface $order, Request $request) {
+    $klarna_order = $this->klarna->getOrder($order, $order->getData('klarna_id'));
+
+    if (!isset($klarna_order['status']) || $klarna_order['status'] !== 'checkout_complete') {
+      $this->logger->error(
+        $this->t('Confirmation failed for order @order [@ref]', [
+          '@order' => $order->id(),
+          '@ref' => $order->getData('klarna_id'),
+        ])
+      );
+
+      throw new PaymentGatewayException();
+    }
+
     $payment_storage = $this->entityTypeManager->getStorage('commerce_payment');
     $payment = $payment_storage->create([
       'state' => 'authorization',
@@ -189,16 +203,6 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
       'authorized' => \Drupal::time()->getRequestTime(),
     ]);
     $payment->save();
-
-    $klarna_order_id = $request->query->get('klarna_order_id');
-    if ($klarna_order_id != $order->getData('klarna_id')) {
-      $this->logger->error(
-        $this->t('Confirmation post request sent with different id @order [@ref]', [
-          '@order' => $klarna_order_id,
-          '@ref' => $order->getData('klarna_id'),
-        ])
-      );
-    }
   }
 
   /**
