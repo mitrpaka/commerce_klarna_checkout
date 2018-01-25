@@ -209,17 +209,31 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
    * {@inheritdoc}
    */
   public function onNotify(Request $request) {
-    $storage = $this->entityTypeManager->getStorage('commerce_order');
-
     /** @var \Drupal\commerce_order\Entity\OrderInterface $commerce_order */
-    if (!$commerce_order = $storage->load($request->query->get('commerce_order'))) {
+    $commerce_order = $this->entityTypeManager
+      ->getStorage('commerce_order')
+      ->load($request->query->get('commerce_order'));
 
+    if (!$commerce_order instanceof OrderInterface) {
       $this->logger->notice(
         $this->t('Notify callback called for an invalid order @order [@values]', [
           '@order' => $request->query->get('commerce_order'),
           '@values' => print_r($request->query->all(), TRUE),
         ])
       );
+
+      return FALSE;
+    }
+
+    // Validate Klarna order id.
+    if ($commerce_order->getData('klarna_id') !== $request->query->get('klarna_order_id')) {
+      $this->logger->error(
+        $this->t('Notify callback failed for order @order. Request param for Klarna order id does not match the one given by Klarna [@id]', [
+          '@order' => $commerce_order->id(),
+          '@id' => $commerce_order->getData('klarna_id'),
+        ])
+      );
+      return FALSE;
     }
 
     // Get order from Klarna.
@@ -228,30 +242,59 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
     // Validate commerce order and acknowledge order to Klarna.
     if (isset($klarna_order)) {
       if ($klarna_order['status'] == 'checkout_complete') {
-        // Mark payment as captured.
         /** @var \Drupal\commerce_payment\Entity\PaymentInterface $payment */
         $payment = $this->getPayment($commerce_order);
-        $payment->setState('completed');
-        $payment->save();
+        if (isset($payment)) {
+          // Mark payment as captured.
+          $payment->setState('completed');
+          $payment->save();
 
-        // Update billing profile (if enabled).
-        if ($this->configuration['update_billing_profile'] && isset($klarna_order['billing_address'])) {
-          $this->klarna->updateBillingProfile($commerce_order, $klarna_order['billing_address']);
-        }
+          // Update billing profile (if enabled).
+          if ($this->configuration['update_billing_profile'] && isset($klarna_order['billing_address'])) {
+            $this->klarna->updateBillingProfile($commerce_order, $klarna_order['billing_address']);
+          }
 
-        // Validate commerce order.
-        $transition = $commerce_order->getState()
-          ->getWorkflow()
-          ->getTransition('validate');
-        if (isset($transition)) {
-          $commerce_order->getState()->applyTransition($transition);
+          // Save order changes.
           $commerce_order->save();
+
+          // Ensure that commerce order is placed before updating orders (commerce/klarna).
+          if ($commerce_order->getPlacedTime() !== NULL) {
+            // Validate commerce order.
+            $transition = $commerce_order->getState()
+              ->getWorkflow()
+              ->getTransition('validate');
+            if (isset($transition)) {
+              $commerce_order->getState()->applyTransition($transition);
+              $commerce_order->save();
+            }
+
+            // Update Klarna order status.
+            $update = ['status' => 'created'];
+            $klarna_order->update($update);
+            $klarna_updated = TRUE;
+          }
         }
 
-        // Update Klarna order status.
-        $update = [];
-        $update['status'] = 'created';
-        $klarna_order->update($update);
+        if ($klarna_order['status'] !== 'created') {
+          // We may end up here due to following reasons:
+          // - First push notification sent before commerce order completion
+          // (i.e. payment and/or order not placed yet)
+          // - User is not redirected to order complete page (after payment
+          // completed at Klarna's end.)
+          // Please note that Klarna will send the push notifications every two
+          // hours for a total of 48 hours or until order has been confirmed.
+          // The pusher works on 2 hour clock intervals.
+          // TODO: Should we dispatch event here in order to allow eg.
+          // re-post the push notification again (with delay), or complete order
+          // programmatically after number of push notifications received.
+          $this->logger->notice(
+            $this->t('Push notification for Order @order [state: @state, ref: @ref] ignored. Klarna order status not updated.', [
+              '@order' => $commerce_order->id(),
+              '@ref' => $commerce_order->getData('klarna_id'),
+              '@state' => $commerce_order->getState()->value,
+            ])
+          );
+        }
       }
       else {
         $this->logger->error(
