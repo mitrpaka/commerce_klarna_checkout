@@ -221,7 +221,6 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
           '@values' => print_r($request->query->all(), TRUE),
         ])
       );
-
       return FALSE;
     }
 
@@ -249,29 +248,27 @@ class KlarnaCheckout extends OffsitePaymentGatewayBase {
           $payment->setState('completed');
           $payment->save();
 
-          // Update billing profile (if enabled).
-          if ($this->configuration['update_billing_profile'] && isset($klarna_order['billing_address'])) {
-            $this->klarna->updateBillingProfile($commerce_order, $klarna_order['billing_address']);
-          }
-
-          // Save order changes.
-          $commerce_order->save();
-
           // Ensure that commerce order is placed before updating orders (commerce/klarna).
           if ($commerce_order->getPlacedTime() !== NULL) {
+            // Update billing profile (if enabled).
+            if ($this->configuration['update_billing_profile'] && isset($klarna_order['billing_address'])) {
+              $this->klarna->updateBillingProfile($commerce_order, $klarna_order['billing_address']);
+            }
+
             // Validate commerce order.
             $transition = $commerce_order->getState()
               ->getWorkflow()
               ->getTransition('validate');
             if (isset($transition)) {
               $commerce_order->getState()->applyTransition($transition);
-              $commerce_order->save();
             }
+
+            // Save order changes.
+            $commerce_order->save();
 
             // Update Klarna order status.
             $update = ['status' => 'created'];
             $klarna_order->update($update);
-            $klarna_updated = TRUE;
           }
         }
 
